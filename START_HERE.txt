@@ -1,0 +1,33 @@
+ATTACKFORECAST — START HERE
+===========================
+
+1) Open this folder in VS Code.
+
+2) Open a PowerShell terminal:
+
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   python -m pip install -r requirements.txt
+   python run.py
+
+3) Open http://127.0.0.1:8000
+
+4) Click: Upload Dataset Folder
+
+5) Choose the folder containing the GeneratedLabelledFlows CSV files.
+
+6) Wait for the upload progress to reach 100%. Then wait while the message says the backend is analyzing the CSVs and building the graph/timeline.
+
+7) When complete, use:
+   - Full overview: whole analyzed network grouped to fit one box
+   - Host view: exact IPs
+   - Attack path: readable suspicious/predicted chain
+   - Chat icon: SOC Copilot
+   - Timeline icon: uploaded flow event timeline
+
+IMPORTANT
+---------
+Use ONLY http://127.0.0.1:8000 for this build.
+Do not open 5173 or 5175.
+
+The graph/timeline are rebuilt from the selected folder. No attacker IP needs to be typed manually.

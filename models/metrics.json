@@ -1,0 +1,10 @@
+{
+  "accuracy": 0.999835778410335,
+  "classes": [
+    "CREDENTIAL_ATTACK",
+    "NORMAL",
+    "RECONNAISSANCE"
+  ],
+  "test_samples": 18268,
+  "feature_count": 68
+}
