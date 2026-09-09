@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AttackForecast — AI Network Attack Forecasting</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">⛨</div>
+        <div><div class="brand-name">AttackForecast</div><div class="brand-sub">AI-powered proactive network defense</div></div>
+      </div>
+      <div class="header-status">
+        <div class="pill">Current stage: <strong id="headerStage">Loading…</strong></div>
+        <div class="pill online" id="backendPill">● Backend online</div>
+      </div>
+    </header>
+
+    <section class="dataset-bar">
+      <div class="dataset-meta">
+        <div class="dataset-icon">▣</div>
+        <div class="dataset-copy">
+          <div class="dataset-name" id="datasetName">No dataset loaded</div>
+          <div class="dataset-message" id="datasetMessage">Choose a CICIDS GeneratedLabelledFlows folder. Graph, timeline, risk, forecast and Copilot context will be rebuilt from it.</div>
+          <div class="progress hidden" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <label class="btn cyan primary-upload" for="folderInput">📁 Upload Dataset Folder</label>
+        <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
+        <label class="btn blue" for="fileInput">⇧ Upload CSV/ZIP</label>
+        <input id="fileInput" type="file" accept=".csv,.zip" hidden />
+        <button class="btn green" id="replayBtn">▶ Load Real Sample</button>
+        <button class="btn" id="resetBtn">↺ Reset</button>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="metric cyan"><div class="metric-label">CURRENT STAGE</div><div class="metric-value" id="currentStage">—</div><div class="metric-sub" id="hostRelationCount">—</div></article>
+      <article class="metric blue"><div class="metric-label">DETECTION CONFIDENCE</div><div class="metric-value" id="detectionConfidence">—</div><div class="metric-sub" id="detectionCategory">—</div></article>
+      <article class="metric risk"><div class="metric-label">NETWORK RISK</div><div class="metric-value" id="networkRisk">—</div><div class="metric-sub" id="networkRiskLevel">—</div></article>
+      <article class="metric amber"><div class="metric-label">FORECAST PROBABILITY</div><div class="metric-value" id="forecastProbability">—</div><div class="metric-sub" id="forecastStage">—</div></article>
+    </section>
+
+    <main class="dashboard" id="dashboard">
+      <div class="main-row">
+        <section class="graph-card">
+          <div class="panel-header graph-header">
+            <div>
+              <div class="panel-title">Network Attack Graph</div>
+              <div class="panel-sub" id="graphSubtitle">Clear attack path from observed CICIDS2017 flow relationships</div>
+            </div>
+            <div class="graph-controls">
+              <button class="mode-btn active" data-mode="overview">▦ Full overview</button>
+              <button class="mode-btn" data-mode="full">☷ Host view</button>
+              <button class="mode-btn" data-mode="attack">⇢ Attack path</button>
+              <button class="mode-btn" id="normalToggle">◉ Normal edges</button>
+              <button class="mode-btn" id="fitBtn">⊙ Fit graph</button>
+            </div>
+          </div>
+
+          <div class="graph-body" id="graphBody">
+            <svg id="graphSvg" class="graph-svg" role="img" aria-label="Network attack graph">
+              <defs>
+                <marker id="arrowNormal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5f718d"></path></marker>
+                <marker id="arrowRecon" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f0b44a"></path></marker>
+                <marker id="arrowCred" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ef5965"></path></marker>
+                <marker id="arrowPred" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#a78bfa"></path></marker>
+              </defs>
+              <g id="graphViewport"></g>
+            </svg>
+            <div class="graph-empty hidden" id="graphEmpty">No graph data yet. Upload a GeneratedLabelledFlows folder, CSV, or ZIP to build the graph from real flow records.</div>
+            <div class="graph-legend"><span><i class="dot normal"></i>Normal</span><span><i class="dot recon"></i>Recon / T1046</span><span><i class="dot cred"></i>Credential / T1110</span><span><i class="line pred"></i>Predicted</span></div>
+            <div class="zoom-controls"><button id="zoomIn">＋</button><button id="zoomOut">−</button><button id="fitSmall">⌂</button></div>
+
+            <aside class="host-inspector hidden" id="hostInspector">
+              <button class="close-small" id="closeInspector">×</button>
+              <div class="inspector-kicker">SELECTED HOST</div>
+              <div class="inspector-ip" id="inspectorIp">—</div>
+              <div class="risk-big"><span id="inspectorRisk">—</span><small>/ 100</small></div>
+              <div class="risk-level" id="inspectorRiskLevel">—</div>
+              <div class="inspector-grid" id="inspectorGrid"></div>
+              <div class="breakdown-title">Risk breakdown</div>
+              <div id="riskBreakdown"></div>
+            </aside>
+
+            <div class="floating-tools">
+              <button class="float-btn" id="chatIcon" title="SOC Copilot">💬<span>Chat</span></button>
+              <button class="float-btn" id="timelineIcon" title="Event Timeline">◷<span>Timeline</span><b id="timelineBadge">0</b></button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="chat-drawer" id="chatDrawer">
+          <div class="drawer-header"><div><div class="panel-title">SOC Copilot</div><div class="panel-sub">Evidence-grounded RAG assistant</div></div><button class="icon-btn" id="closeChat">×</button></div>
+          <div class="answer-mode"><span>Answer length</span><div class="segmented"><button data-mode="one_line">1 line</button><button data-mode="two_lines">2 lines</button><button data-mode="detailed" class="active">Detailed</button></div></div>
+          <div class="context-chip" id="chatContext">Context: whole analyzed network</div>
+          <div class="suggestions" id="suggestions"></div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg bot"><div class="chat-role">SOC COPILOT</div><div>Ask me about the graph, timeline, risk score, MITRE techniques, forecast probability, predicted target, or defensive actions. Choose 1 line, 2 lines, or Detailed above.</div></div>
+          </div>
+          <div class="chat-input-row">
+            <button class="voice-btn" id="micBtn" title="Speech to text">🎤</button>
+            <textarea id="chatInput" rows="2" placeholder="Ask a question about the current dataset…"></textarea>
+            <button class="send-btn" id="sendChat">Send</button>
+          </div>
+          <div class="voice-status" id="voiceStatus">Voice: ready • answers can be read aloud</div>
+        </aside>
+      </div>
+
+      <section class="timeline-drawer" id="timelineDrawer">
+        <div class="drawer-header timeline-head">
+          <div><div class="panel-title">Event Timeline</div><div class="panel-sub">Timestamped evidence from processed flows, model detections and MITRE mapping</div></div>
+          <div class="timeline-actions"><button class="filter-btn active" data-filter="all">All</button><button class="filter-btn" data-filter="suspicious">Suspicious</button><button class="filter-btn" data-filter="malicious">Malicious</button><button class="filter-btn" data-filter="selected">Selected host</button><button class="icon-btn" id="closeTimeline">×</button></div>
+        </div>
+        <div class="timeline-table-wrap"><table><thead><tr><th>Time</th><th>Event</th><th>Source</th><th>Destination</th><th>Port / Protocol</th><th>MITRE</th><th>Dataset label</th><th>Confidence</th><th>Status</th></tr></thead><tbody id="timelineBody"></tbody></table></div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
